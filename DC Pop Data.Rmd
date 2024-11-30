@@ -1,0 +1,257 @@
+
+```{r}
+
+install.packages("sf")
+install.packages("usmap")
+library("sf")
+library("usmap")
+library(ggplot2)
+library(tidyr)
+library(tidyverse)
+library(tidycensus)
+library(dplyr)
+library(plyr)
+
+# Load Census data
+census_api_key('CENSUS API KEY')
+acs22 <- load_variables(2022, "acs5", cache = FALSE)  
+
+```
+
+```{r - Population Pyramid}
+
+fdc22 <- get_acs(geography = "state", state = "DC",
+                 variables = c('B01001_027', 'B01001_028', 'B01001_029', 
+                               'B01001_030', 'B01001_031', 'B01001_032', 
+                               'B01001_033', 'B01001_034', 'B01001_035',
+                               'B01001_036', 'B01001_037', 'B01001_038', 
+                               'B01001_039', 'B01001_040', 'B01001_041',
+                               'B01001_042', 'B01001_043', 'B01001_044', 
+                               'B01001_045', 'B01001_046', 'B01001_047', 
+                               'B01001_048', 'B01001_049'), 
+                       year = 2022, geometry = TRUE,
+                       output = "wide") %>%
+         group_by(NAME) %>%
+         mutate(Year = 2022, Gender = 'Women',              
+                '0-4' = (B01001_027E), 
+                "5-9" = (B01001_028E),
+                '10-14' = (B01001_029E),
+                '15-19' = (B01001_030E) + (B01001_031E), #Mutate certain age groups
+                '20-24' = (B01001_032E) + (B01001_033E) + (B01001_034E),
+                "25-29" = (B01001_035E), 
+                "30-34" = (B01001_036E),
+                "35-39" = (B01001_037E), 
+                "40-44" = (B01001_038E),
+                "45-49" = (B01001_039E), 
+                "50-54" = (B01001_040E),
+                "55-59" = (B01001_041E), 
+                '60-64' = (B01001_042E) + (B01001_043E),
+                '65-69' = (B01001_044E) + (B01001_045E),
+                "70-74" = (B01001_046E),
+                "75-79" = (B01001_047E), 
+                "80-84" = (B01001_048E),
+                "85+" = (B01001_049E)) %>%
+         select(-B01001_027E, -B01001_028E, -B01001_029E, -B01001_030E, 
+                -B01001_031E, -B01001_032E, -B01001_033E, -B01001_034E, 
+                -B01001_035E, -B01001_036E, -B01001_037E, -B01001_038E, 
+                -B01001_039E, -B01001_040E, -B01001_041E, -B01001_042E, 
+                -B01001_043E, -B01001_044E, -B01001_045E, -B01001_046E, 
+                -B01001_047E, -B01001_048E, -B01001_049E,
+                -B01001_027M, -B01001_028M, -B01001_029M, -B01001_030M, 
+                -B01001_031M, -B01001_032M, -B01001_033M, -B01001_034M, 
+                -B01001_035M, -B01001_036M, -B01001_037M, -B01001_038M, 
+                -B01001_039M, -B01001_040M, -B01001_041M, -B01001_042M, 
+                -B01001_043M, -B01001_044M, -B01001_045M, -B01001_046M, 
+                -B01001_047M, -B01001_048M, -B01001_049M) %>%
+        distinct()
+
+
+mdc22 <- get_acs(geography = "county", state = "DC",
+                 variables = c('B01001_003', 'B01001_004', 'B01001_005', 
+                               'B01001_006', 'B01001_007', 'B01001_008', 
+                               'B01001_009', 'B01001_010', 'B01001_011',
+                               'B01001_012', 'B01001_013', 'B01001_014', 
+                               'B01001_015', 'B01001_016', 'B01001_017',
+                               'B01001_018', 'B01001_019', 'B01001_020', 
+                               'B01001_021', 'B01001_022', 'B01001_023', 
+                               'B01001_024', 'B01001_025'), 
+                       year = 2022, geometry = TRUE,
+                       output = "wide") %>%
+         mutate(Year = 2022,Gender = 'Men',
+                '0-4' = (B01001_003E), 
+                "5-9" = (B01001_004E),
+                '10-14' = (B01001_005E),
+                '15-19' = (B01001_006E) + (B01001_007E),
+                '20-24' = (B01001_008E) + (B01001_009E) + (B01001_010E),
+                "25-29" = (B01001_011E), 
+                "30-34" = (B01001_012E),
+                "35-39" = (B01001_013E), 
+                "40-44" = (B01001_014E),
+                "45-49" = (B01001_015E), 
+                "50-54" = (B01001_016E),
+                "55-59" = (B01001_017E), 
+                '60-64' = (B01001_018E) + (B01001_019E),
+                '65-69' = (B01001_020E) + (B01001_021E),
+                "70-74" = (B01001_022E),
+                "75-79" = (B01001_023E), "80-84" = (B01001_024E),
+                "85+" = (B01001_025E)) %>%
+         select(-B01001_003E, -B01001_004E, -B01001_005E, -B01001_006E, 
+                -B01001_007E, -B01001_008E, -B01001_009E, -B01001_010E, 
+                -B01001_011E, -B01001_012E, -B01001_013E, -B01001_014E, 
+                -B01001_015E, -B01001_016E, -B01001_017E, -B01001_018E, 
+                -B01001_019E, -B01001_020E, -B01001_021E, -B01001_022E, 
+                -B01001_023E, -B01001_024E, -B01001_025E,
+                -B01001_003M, -B01001_004M, -B01001_005M, -B01001_006M, 
+                -B01001_007M, -B01001_008M, -B01001_009M, -B01001_010M, 
+                -B01001_011M, -B01001_012M, -B01001_013M, -B01001_014M, 
+                -B01001_015M, -B01001_016M, -B01001_017M, -B01001_018M,
+                -B01001_019M, -B01001_020M, -B01001_021M, -B01001_022M, 
+                -B01001_023M, -B01001_024M, -B01001_025M) %>%
+        distinct()
+
+
+dcpop22 <- rbind(fdc22, mdc22)     # Merge two data frames
+dcpop22 <- pivot_longer(dcpop22, cols=6:23, names_to = "Age_Group", 
+                        values_to = "Population") # Turn Columns into Rows
+
+acsdata <- dcpop22 %>% mutate(Population = ifelse(Gender=='Women',1,-1)*Population,
+                             Age_Group = factor(Age_Group, levels=unique(Age_Group)))
+
+ggplot() +
+  aes(x = Age_Group, y = Population, fill = Gender) + 
+  geom_bar(data = filter(acsdata, Gender == "Women"), stat='identity', color="black") + 
+  geom_bar(data = filter(acsdata, Gender == "Men"), stat='identity', color="black") +
+  scale_y_continuous(breaks=seq(-40000, 40000, 20000),
+                     labels =c('40,000','20,000', '0',
+                               '20,000', '40,000'),
+                     limits = c(-41000, 41000)) +
+  xlab("Age Groups") + ylab("Population") + coord_flip() +
+  labs(fill = "Gender",
+       title = "Washington, D.C. 2022 Population", 
+       subtitle = "by Gender",
+       caption = 'Source: American Community Survey (ACS), 
+       2018-2022 5-year Estimates') +
+ scale_fill_manual(values=c('#001864', 'firebrick')) +
+  theme(panel.border= element_blank(),
+        plot.background = element_blank(),
+         panel.grid.major = element_blank(),
+         panel.grid.minor = element_blank())+
+  theme(plot.background = element_rect(fill = "white", color = NA),
+        panel.background = element_rect(fill = "white"),
+        axis.text = element_text(color = "black", size = 12),
+        axis.title = element_text(color = "black", size = 14),
+        plot.title = element_text(face="bold", hjust = 0.5, color = "black", size = 14),
+        plot.subtitle = element_text(face="bold", hjust = 0.5, color = "black", size = 14),
+      # plot.margin = unit(c(2,1.5,1,1), "cm"),
+        axis.line.x = element_line(color="black", size = 0.5),
+        axis.line.y = element_line(color="black", size = 0.5),
+        panel.grid = element_line(color = "white")) 
+
+
+dc_total <- aggregate(dcpop22$Population, by=list(Population=dcpop22$Gender), FUN=sum)
+
+dc_total <- dc_total %>% mutate(total = sum(x),
+                                perct = round((x/total)*100,1))
+
+ggplot(dc_total, aes(x="", y=perct, fill = factor(Population))) +
+             geom_bar(stat="identity", width=1, color="white") +
+             scale_fill_manual(values=c('#001864', 'firebrick')) +
+             geom_text(aes(label = paste(perct, "%")), color = "white",
+                       position = position_stack(vjust = 0.5), size = 6) +
+             coord_polar("y", start=0) +
+             labs(fill = "Gender", x = NULL, y = NULL,
+                  title = "Washington, D.C. 2022 Population",
+                  subtitle = "By Gender") +
+             theme_void() +
+  theme(plot.title = element_text(face="bold", hjust = 0.5, color = "black", size = 14),
+        plot.subtitle = element_text(face="bold", hjust = 0.5, color = "black", size = 14),
+        legend.position="bottom")
+```
+
+```{r - Race}
+
+dc_race <- get_acs(geography = "state", state = "DC",
+                 variables = c('B01001B_001', 'B01001C_001', 
+                               'B01001D_001', 'B01001E_001', 'B01001F_001', 
+                               'B01001G_001', 'B01001H_001', 'B01001I_001'), 
+                       year = 2022, geometry = TRUE,
+                       output = "wide") %>%
+         group_by(NAME) %>%
+         mutate('White (Alone)' = (B01001H_001E), 
+                "Black or African American" = (B01001B_001E),
+                'Two or More Races' = (B01001G_001E),
+                'Asian (Alone)' = (B01001D_001E),
+                'Other' = (B01001C_001E+B01001E_001E+B01001F_001E),
+                "Hispanic" = (B01001I_001E)) %>%
+         select (-B01001B_001M, -B01001C_001M, -B01001D_001M,
+                -B01001E_001M, -B01001F_001M, -B01001G_001M, -B01001H_001M,
+                -B01001I_001M,
+                -B01001B_001E, -B01001C_001E, -B01001D_001E,
+                -B01001E_001E, -B01001F_001E, -B01001G_001E, -B01001H_001E,
+                -B01001I_001E) %>%
+        distinct()
+
+
+dc_race22 <- pivot_longer(dc_race, cols=4:9, names_to = "race", 
+                        values_to = "Population") 
+
+dc_race_data <- dc_race22 %>% mutate(total = sum(Population),
+                                     perct = round((Population/total)*100,1))
+
+dc_race_data$perct[dc_race_data$perct == 4.6] <- 4.7
+
+ggplot(dc_race_data, aes(x=reorder(race, -perct), y=perct)) +
+  geom_bar(aes(fill = race), stat = "identity",position = "dodge",
+           fill = "#001864", color = "#001864") +
+  scale_y_continuous(limits = c(0, 42)) +
+  geom_text(aes(label = paste(format(perct), "%")), position = position_dodge(width = .9),                     vjust = -0.5, size = 5) +
+  labs(y = "Percent of Population (%)",       
+       x = "Race/Ethnicity", 
+       title = "Washington, D.C. 2022 Population", 
+       subtitle = "by Race/Ethnicity", # Add a sub title
+       caption = 'Source: American Community Survey (ACS), 
+       2018-2022 5-year Estimates') +  # Cite source
+  theme(panel.border= element_blank(),
+        plot.background = element_blank(),
+         panel.grid.major = element_blank(),
+         panel.grid.minor = element_blank())+
+  theme(plot.background = element_rect(fill = "white", color = NA),
+        panel.background = element_rect(fill = "white"),
+        axis.text = element_text(color = "black", size = 12),
+        axis.title = element_text(color = "black", size = 14),
+        plot.title = element_text(face="bold", hjust = 0.5, color = "black", size = 14),
+        plot.subtitle = element_text(face="bold", hjust = 0.5, color = "black", size = 14),
+      # plot.margin = unit(c(2,1.5,1,1), "cm"),
+        axis.line.x = element_line(color="black", size = 0.5),
+        axis.line.y = element_line(color="black", size = 0.5),
+        panel.grid = element_line(color = "white"),
+        legend.position = "none") 
+
+```
+
+```{r - Map}
+
+dc_pop <- get_acs(geography = "tract", state = "DC",
+                 variables = c('B01003_001'), 
+                       year = 2022, geometry = TRUE,
+                       output = "wide") %>%
+        distinct()
+
+ggplot(data = dc_pop) +
+  geom_sf(aes(geometry = geometry, fill = B01003_001E), size = 0.2, color = "white") +
+ scale_fill_gradient(high = "#001864", low = "skyblue",
+                     limits = c(0, 7000), 
+                     breaks = c(0, 2000, 4000, 6000),
+                     labels = c('0', '2,000','4,000','6,000')) +
+  labs(title = "Washington, D.C. 2022 Population", 
+       subtitle = "by Subdivision",
+       caption = 'Source: American Community Survey (ACS), 
+       2018-2022 5-year Estimates',
+       fill = "Population") +
+  theme_void() +
+  theme(plot.title = element_text(face="bold", hjust = 0.5, color = "black", size = 14),
+        plot.subtitle = element_text(face="bold", hjust = 0.5, color = "black", size = 14))
+```
+
+
+
