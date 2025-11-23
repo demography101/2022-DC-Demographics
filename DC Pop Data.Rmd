@@ -18,7 +18,7 @@ acs22 <- load_variables(2022, "acs5", cache = FALSE)
 
 ```
 
-```{r - Population Pyramid}
+```{r - Population Pyramid & Pie Chart}
 
 fdc22 <- get_acs(geography = "state", state = "DC",
                  variables = c('B01001_027', 'B01001_028', 'B01001_029', 
@@ -147,6 +147,8 @@ ggplot() +
         axis.line.y = element_line(color="black", size = 0.5),
         panel.grid = element_line(color = "white")) 
 
+
+# Pie Chart
 
 dc_total <- aggregate(dcpop22$Population, by=list(Population=dcpop22$Gender), FUN=sum)
 
